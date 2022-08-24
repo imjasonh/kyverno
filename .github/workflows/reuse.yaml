@@ -14,11 +14,6 @@ on:
         type: string
       main: 
         type: string
-    secrets:
-      registry_username:
-        required: true
-      registry_password:
-        required: true
 
 jobs:
   build:
@@ -50,7 +45,7 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@116dc6872c0a067bcb78758f18955414cdbf918f # v1.4.1
         with:
-          cosign-release: 'v1.4.1'
+          cosign-release: 'v1.11.1'
 
       - name: Cache Go modules
         uses: actions/cache@d9747005de0f7240e5d35a68dca96b3f41b8b340 # v1.2.0
@@ -62,13 +57,6 @@ jobs:
 
       - name: Install ko
         uses: imjasonh/setup-ko@78eea08f10db87a7a23a666a4a6fe2734f2eeb8d #v0.5
-
-      - name: Log into ghcr.io
-        uses: docker/login-action@7c79b598eaa33458e78e8d0d71e0a9c217dd92af
-        with:
-          registry: ghcr.io
-          username: ${{secrets.registry_username}}
-          password: ${{secrets.registry_password}}
 
       - name: Run Trivy vulnerability scanner in repo mode
         if: ${{inputs.tag == 'release'}}
@@ -117,13 +105,13 @@ jobs:
         id: ko-build-dev
         if: ${{inputs.tag == 'release' || (inputs.tag == 'image' && steps.check-branch.outputs.match == 'true')}}
         run: |
-          echo "::set-output name=digest::$(make ${{inputs.publish_command}}-dev)"
+          echo "::set-output name=digest::$(REGISTRY=ghcr.io/${{github.repository}} make ${{inputs.publish_command}}-dev)"
 
       - name: ko build release image
         id: ko-build
         if: ${{inputs.tag == 'release' || (inputs.tag == 'image' && steps.check-branch.outputs.match == 'true')}}
         run: |
-          echo "::set-output name=digest::$(make ${{inputs.publish_command}})"
+          echo "::set-output name=digest::$(REGISTRY=ghcr.io/${{github.repository}} make ${{inputs.publish_command}})"
 
       - name: Sign dev image
         if: ${{inputs.tag == 'image' && steps.extract_branch.outputs.branch == 'main'}}
@@ -153,4 +141,4 @@ jobs:
         if: ${{inputs.tag == 'release'}}
         env:
           COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/sbom"
-        run: cosign attach sbom --sbom ./${{inputs.image_name}}-v*-bom.cdx.json --type cyclonedx  ghcr.io/${{ github.repository_owner }}/${{inputs.image_name}}@sha256:${{ steps.get-step.outputs.digest }}
+        run: cosign attach sbom --sbom ./${{inputs.image_name}}-v*-bom.cdx.json --type cyclonedx ${{ steps.ko-build.outputs.digest }}
