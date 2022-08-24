@@ -105,13 +105,13 @@ jobs:
         id: ko-build-dev
         if: ${{inputs.tag == 'release' || (inputs.tag == 'image' && steps.check-branch.outputs.match == 'true')}}
         run: |
-          echo "::set-output name=digest::$(make ${{inputs.publish_command}}-dev)"
+          echo "::set-output name=digest::$(REGISTRY=ghcr.io/${{github.repository}} make ${{inputs.publish_command}}-dev)"
 
       - name: ko build release image
         id: ko-build
         if: ${{inputs.tag == 'release' || (inputs.tag == 'image' && steps.check-branch.outputs.match == 'true')}}
         run: |
-          echo "::set-output name=digest::$(make ${{inputs.publish_command}})"
+          echo "::set-output name=digest::$(REGISTRY=ghcr.io/${{github.repository}} make ${{inputs.publish_command}})"
 
       - name: Sign dev image
         if: ${{inputs.tag == 'image' && steps.extract_branch.outputs.branch == 'main'}}
