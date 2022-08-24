@@ -10,7 +10,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: kyverno/kyverno/.github/workflows/reuse.yaml@main
+    uses: imjasonh/kyverno/.github/workflows/reuse.yaml@ko2 # TODO: REMOVE
     with:
       publish_command: ko-build-initContainer
       image_name: kyvernopre
@@ -25,7 +25,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: kyverno/kyverno/.github/workflows/reuse.yaml@main
+    uses: imjasonh/kyverno/.github/workflows/reuse.yaml@ko2 # TODO: REMOVE
     with:
       publish_command: ko-build-kyverno
       image_name: kyverno
@@ -40,7 +40,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: kyverno/kyverno/.github/workflows/reuse.yaml@main
+    uses: imjasonh/kyverno/.github/workflows/reuse.yaml@ko2 # TODO: REMOVE
     with:
       publish_command: ko-build-cli
       image_name: kyverno-cli
