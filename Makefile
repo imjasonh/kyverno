@@ -35,8 +35,6 @@ TEST_GIT_BRANCH ?= main
 KIND_VERSION=v0.14.0
 KIND_IMAGE?=kindest/node:v1.24.0
 
-KO_VERSION=v0.11.2
-
 ##################################
 # KYVERNO
 ##################################
@@ -67,22 +65,22 @@ initContainer: fmt vet
 .PHONY: ko-build-initContainer
 
 ko-build-initContainer: KO_DOCKER_REPO=$(REPO)/$(INITC_IMAGE)
-ko-build-initContainer: ko-install
+ko-build-initContainer:
 	@ko build ./$(INITC_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64,linux/arm64,linux/s390x
 
 ko-build-initContainer-amd64: KO_DOCKER_REPO=$(REPO)/$(INITC_IMAGE)
-ko-build-initContainer-amd64: ko-install
+ko-build-initContainer-amd64:
 	@ko build ./$(INITC_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64
 
 ko-build-initContainer-local: KO_DOCKER_REPO=kind.local
-ko-build-initContainer-local: kind-e2e-cluster ko-install
+ko-build-initContainer-local: kind-e2e-cluster
 	@ko build ./$(INITC_PATH) --platform=linux/$(GOARCH) --tags=$(IMAGE_TAG_DEV) --sbom=none
 
 INITC_KIND_IMAGE = kind.local/initcontainer-3027d9a00bb98633b8ebc6f254096c28
 
 # TODO(jason): LD_FLAGS_DEV
 ko-build-initContainer-dev: KO_DOCKER_REPO=$(REPO)/$(INITC_IMAGE)
-ko-build-initContainer-dev: ko-install
+ko-build-initContainer-dev:
 	@ko build ./$(INITC_PATH) --platform=linux/amd64,linux/arm64,linux/s390x --tags=latest,$(IMAGE_TAG_DEV),$(IMAGE_TAG_LATEST_DEV)
 
 ##################################
@@ -97,22 +95,22 @@ kyverno: fmt vet
 	GOOS=$(GOOS) go build -o $(PWD)/$(KYVERNO_PATH)/kyverno -ldflags"$(LD_FLAGS)" $(PWD)/$(KYVERNO_PATH)
 
 ko-build-kyverno: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_IMAGE)
-ko-build-kyverno: ko-install
+ko-build-kyverno:
 	@ko build ./$(KYVERNO_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64,linux/arm64,linux/s390x
 
 ko-build-kyverno-amd64: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_IMAGE)
-ko-build-kyverno-amd64: ko-install
+ko-build-kyverno-amd64:
 	@ko build ./$(KYVERNO_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64
 
 ko-build-kyverno-local: KO_DOCKER_REPO=kind.local
-ko-build-kyverno-local: kind-e2e-cluster ko-install
+ko-build-kyverno-local: kind-e2e-cluster
 	@ko build ./$(KYVERNO_PATH) --platform=linux/$(GOARCH) --tags=$(IMAGE_TAG_DEV) --sbom=none
 
 KYVERNO_KIND_IMAGE = kind.local/kyverno-209b6ec48e51ca2c262f041f9fa83291
 
 # TODO(jason): LD_FLAGS_DEV
 ko-build-kyverno-dev: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_IMAGE)
-ko-build-kyverno-dev: ko-install
+ko-build-kyverno-dev:
 	@ko build ./$(KYVERNO_PATH) --platform=linux/amd64,linux/arm64,linux/s390x --tags=latest,$(IMAGE_TAG_DEV),$(IMAGE_TAG_LATEST_DEV)
 
 ##################################
@@ -149,20 +147,20 @@ cli:
 	GOOS=$(GOOS) go build -o $(PWD)/$(CLI_PATH)/kyverno -ldflags="$(LD_FLAGS)" $(PWD)/$(CLI_PATH)
 
 ko-build-cli: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_CLI_IMAGE)
-ko-build-cli: ko-install
+ko-build-cli:
 	@ko build ./$(CLI_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64,linux/arm64,linux/s390x
 
 ko-build-cli-amd64: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_CLI_IMAGE)
-ko-build-cli-amd64: ko-install
+ko-build-cli-amd64:
 	@ko build ./$(CLI_PATH) --bare --tags=$(IMAGE_TAG) --platform=linux/amd64
 
 ko-build-cli-local: KO_DOCKER_REPO=ko.local
-ko-build-cli-local: ko-install
+ko-build-cli-local:
 	@ko build ./$(CLI_PATH) --platform=linux/$(GOARCH) --tags=latest
 
 # TODO(jason): LD_FLAGS_DEV
 ko-build-cli-dev: KO_DOCKER_REPO=$(REPO)/$(KYVERNO_CLI_IMAGE)
-ko-build-cli-dev: ko-install
+ko-build-cli-dev:
 	@ko build ./$(CLI_PATH) --platform=linux/amd64,linux/arm64,linux/s390x --tags=latest,$(IMAGE_TAG_DEV),$(IMAGE_TAG_LATEST_DEV)
 
 ##################################
@@ -435,12 +433,3 @@ kind-deploy: ko-build-initContainer-local ko-build-kyverno-local
 		--set extraArgs={--autogenInternals=false}
 	helm upgrade --install kyverno-policies --namespace kyverno --create-namespace ./charts/kyverno-policies
 
-##################################
-# INSTALL KO
-##################################
-
-.PHONY: ko-install
-ko-install: ## Install ko
-ifeq (, $(shell which ko))
-	go install github.com/google/ko@$(KO_VERSION)
-endif
