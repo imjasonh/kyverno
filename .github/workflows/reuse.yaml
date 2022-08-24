@@ -15,10 +15,6 @@ on:
       main: 
         type: string
     secrets:
-      registry_username:
-        required: true
-      registry_password:
-        required: true
 
 jobs:
   build:
@@ -62,13 +58,6 @@ jobs:
 
       - name: Install ko
         uses: imjasonh/setup-ko@78eea08f10db87a7a23a666a4a6fe2734f2eeb8d #v0.5
-
-      - name: Log into ghcr.io
-        uses: docker/login-action@7c79b598eaa33458e78e8d0d71e0a9c217dd92af
-        with:
-          registry: ghcr.io
-          username: ${{secrets.registry_username}}
-          password: ${{secrets.registry_password}}
 
       - name: Run Trivy vulnerability scanner in repo mode
         if: ${{inputs.tag == 'release'}}
